@@ -14,3 +14,9 @@ local.properties
 !.idea/compiler.xml
 !.idea/misc.xml
 !.idea/vcs.xml
+
+# Signing files
+*.jks
+*.keystore
+keystore.properties
+release-keystore.jks
