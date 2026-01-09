@@ -63,7 +63,7 @@ jobs:
         id: commit_version
         run: |
           git add app/build.gradle.kts
-          git commit -m "chore: bump versionCode to ${{ steps.increment_version.outputs.new_version }}"
+          git commit -m "chore: bump versionCode to ${{ steps.increment_version.outputs.new_version }} [skip ci]"
           COMMIT_SHA=$(git rev-parse HEAD)
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
 
