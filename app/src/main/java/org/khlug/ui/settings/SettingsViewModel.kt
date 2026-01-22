@@ -1,5 +1,6 @@
 package org.khlug.ui.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,12 +10,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.khlug.data.preferences.SettingsPreferences
+import org.khlug.util.WorkManagerUtil
 
 data class SettingsUiState(
     val host: String = "",
     val apiKey: String = "",
     val isSaving: Boolean = false,
-    val saveSuccess: Boolean = false
+    val saveSuccess: Boolean = false,
+    val isBackgroundSyncEnabled: Boolean = false,
+    val isSettingsConfigured: Boolean = false
 )
 
 class SettingsViewModel(
@@ -32,9 +36,18 @@ class SettingsViewModel(
         viewModelScope.launch {
             combine(
                 settingsPreferences.getHost(),
-                settingsPreferences.getApiKey()
-            ) { host, apiKey ->
-                _uiState.update { it.copy(host = host, apiKey = apiKey) }
+                settingsPreferences.getApiKey(),
+                settingsPreferences.isBackgroundSyncEnabled(),
+                settingsPreferences.isConfigured()
+            ) { host, apiKey, backgroundSyncEnabled, isConfigured ->
+                _uiState.update {
+                    it.copy(
+                        host = host,
+                        apiKey = apiKey,
+                        isBackgroundSyncEnabled = backgroundSyncEnabled,
+                        isSettingsConfigured = isConfigured
+                    )
+                }
             }.collect {}
         }
     }
@@ -53,6 +66,19 @@ class SettingsViewModel(
             settingsPreferences.saveHost(_uiState.value.host)
             settingsPreferences.saveApiKey(_uiState.value.apiKey)
             _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
+        }
+    }
+
+    fun toggleBackgroundSync(context: Context) {
+        viewModelScope.launch {
+            val newValue = !_uiState.value.isBackgroundSyncEnabled
+            settingsPreferences.setBackgroundSyncEnabled(newValue)
+
+            if (newValue) {
+                WorkManagerUtil.startBatterySync(context)
+            } else {
+                WorkManagerUtil.stopBatterySync(context)
+            }
         }
     }
 }
