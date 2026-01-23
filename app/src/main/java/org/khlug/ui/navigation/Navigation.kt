@@ -10,12 +10,15 @@ import org.khlug.data.preferences.SettingsPreferences
 import org.khlug.data.repository.BatteryRepository
 import org.khlug.ui.home.HomeScreen
 import org.khlug.ui.home.HomeViewModel
+import org.khlug.ui.settings.NotificationAppFilterScreen
+import org.khlug.ui.settings.NotificationAppFilterViewModel
 import org.khlug.ui.settings.SettingsScreen
 import org.khlug.ui.settings.SettingsViewModel
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Settings : Screen("settings")
+    object NotificationAppFilter : Screen("notification_app_filter")
 }
 
 @Composable
@@ -45,6 +48,19 @@ fun AppNavigation(context: Context) {
                 SettingsViewModel(settingsPreferences)
             }
             SettingsScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAppFilter = {
+                    navController.navigate(Screen.NotificationAppFilter.route)
+                }
+            )
+        }
+
+        composable(Screen.NotificationAppFilter.route) {
+            val viewModel = remember {
+                NotificationAppFilterViewModel(settingsPreferences)
+            }
+            NotificationAppFilterScreen(
                 viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() }
             )

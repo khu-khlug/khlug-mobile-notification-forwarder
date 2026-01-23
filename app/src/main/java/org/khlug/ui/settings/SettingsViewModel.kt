@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.khlug.data.preferences.SettingsPreferences
+import org.khlug.util.NotificationPermissionUtil
 import org.khlug.util.WorkManagerUtil
 
 data class SettingsUiState(
@@ -18,7 +19,9 @@ data class SettingsUiState(
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val isBackgroundSyncEnabled: Boolean = false,
-    val isSettingsConfigured: Boolean = false
+    val isSettingsConfigured: Boolean = false,
+    val isNotificationPermissionGranted: Boolean = false,
+    val isNotificationForwardingEnabled: Boolean = false
 )
 
 class SettingsViewModel(
@@ -38,14 +41,16 @@ class SettingsViewModel(
                 settingsPreferences.getHost(),
                 settingsPreferences.getApiKey(),
                 settingsPreferences.isBackgroundSyncEnabled(),
-                settingsPreferences.isConfigured()
-            ) { host, apiKey, backgroundSyncEnabled, isConfigured ->
+                settingsPreferences.isConfigured(),
+                settingsPreferences.isNotificationForwardingEnabled()
+            ) { host, apiKey, backgroundSyncEnabled, isConfigured, notificationForwardingEnabled ->
                 _uiState.update {
                     it.copy(
                         host = host,
                         apiKey = apiKey,
                         isBackgroundSyncEnabled = backgroundSyncEnabled,
-                        isSettingsConfigured = isConfigured
+                        isSettingsConfigured = isConfigured,
+                        isNotificationForwardingEnabled = notificationForwardingEnabled
                     )
                 }
             }.collect {}
@@ -79,6 +84,18 @@ class SettingsViewModel(
             } else {
                 WorkManagerUtil.stopBatterySync(context)
             }
+        }
+    }
+
+    fun checkNotificationPermission(context: Context) {
+        val isGranted = NotificationPermissionUtil.isNotificationListenerEnabled(context)
+        _uiState.update { it.copy(isNotificationPermissionGranted = isGranted) }
+    }
+
+    fun toggleNotificationForwarding() {
+        viewModelScope.launch {
+            val newValue = !_uiState.value.isNotificationForwardingEnabled
+            settingsPreferences.setNotificationForwardingEnabled(newValue)
         }
     }
 }

@@ -1,6 +1,7 @@
 package org.khlug.data.network
 
 import org.khlug.data.model.BatteryStatusRequest
+import org.khlug.data.model.NotificationRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header
@@ -11,5 +12,11 @@ interface ApiService {
     suspend fun sendBatteryStatus(
         @Header("x-api-key") apiKey: String,
         @Body request: BatteryStatusRequest
+    ): Response<Unit>
+
+    @POST("/internal/khlug-phone/notification")
+    suspend fun sendNotification(
+        @Header("x-api-key") apiKey: String,
+        @Body request: NotificationRequest
     ): Response<Unit>
 }
